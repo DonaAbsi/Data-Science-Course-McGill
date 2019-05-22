@@ -1,0 +1,238 @@
+---
+title: "692_SCRIPT_A2"
+author: "Dona Maria Absi"
+date: '2019-02-04'
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+
+```{r}
+Prosperity_data=read.csv("Prosperity_data.csv")
+Prosperity_ranks=read.csv("Prosperity_ranks.csv")
+
+
+
+
+#----------------------------------------
+#### ITERATION 1
+#----------------------------------------
+
+model_safe_iteration1 <- lm(safe ~ soci +
+                       econ + 
+                       heal + 
+                       busi + 
+                       envi + 
+                       pers + 
+                       gove + 
+                       educ, data = Prosperity_data)
+
+summary(model_safe_iteration1)
+
+
+#----------------------------------------
+#### ITERATION 2
+#----------------------------------------
+
+model_safe_iteration2 <- lm(safe~soci+
+                              econ+
+                              heal+
+                              gove+
+                              educ, data=Prosperity_data)
+
+summary(model_safe_iteration2)
+
+
+#----------------------------------------
+#### ITERATION 3
+#----------------------------------------
+
+Data_integrated=read.csv("Integrated_data.csv")
+
+model_safe_iteration3 <- lm(safe~Adjusted_index+
+                              EthnicGroups+
+                              Population+
+                              Elderly.Population+
+                              Life.Expectancy+
+                              Infant.Mortality.Fraction+
+                              No..Infectious.Diseases+
+                              No..Bordering.Countries+
+                              No..Environmental.Issues+
+                              No..Natural.Hazards+
+                              No..Natural.Resources+
+                              Literacy.Fraction+
+                              Phone.Lines+
+                              Major.Ports+
+                              Cellular.Phones+
+                              Internet.Users+
+                              Airports, data=Data_integrated)
+
+summary(model_safe_iteration3)
+
+
+#----------------------------------------
+#### ITERATION 4 - Final
+#----------------------------------------
+model_safe_iteration4 <- lm(safe~Adjusted_index+
+                              EthnicGroups+
+                              Elderly.Population+
+                              No..Infectious.Diseases+
+                              No..Environmental.Issues, data=Data_integrated)
+
+summary(model_safe_iteration4)
+
+
+#----------------------------------------
+#### Predictive Model
+#----------------------------------------
+
+pred.safe <- predict(model_safe_iteration4, Data_integrated)
+
+library("ggplot2")
+
+ggplot(Data_integrated, aes(pred.safe,Adjusted_index)) +
+  geom_point() +
+  stat_smooth(method = lm) + 
+  geom_line(aes(y = Adjusted_index), color = "red", linetype = "dashed")+
+  ggtitle("Predicted safety level relative to the Adjusted Index")
+
+
+ggplot(Data_integrated, aes(pred.safe, Elderly.Population)) +
+  geom_point() +
+  stat_smooth(method = lm) + 
+  geom_line(aes(y = Elderly.Population), color = "red", linetype = "dashed")+
+  ggtitle("Predicted safety level relative to the % of Elderly population")
+
+
+ggplot(Data_integrated, aes(pred.safe, EthnicGroups)) +
+  geom_point() +
+  stat_smooth(method = lm) + 
+  geom_line(aes(y =  EthnicGroups), color = "red", linetype = "dashed")+
+  ggtitle("Predicted safety level relative to the number of ethnic groups")
+
+
+ggplot(Data_integrated, aes(x=region2,weight=Life.Expectancy,color=region2))+
+  xlab("Region")+
+  ylab("Number of Countries")+
+  labs(color="Region")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  geom_histogram(fill="white", binwidth = 0.5, position="stack", prob=TRUE, stat = "count")
+
+#----------------------------------------
+#### ANNEX = Regional plots
+#----------------------------------------
+
+#unique regions
+unique(Prosperity_data$region2,FALSE)
+
+#regional data
+Asia = Data_integrated[Data_integrated$region2=="Asia",]
+Eastern_Europe = Data_integrated[Data_integrated$region2=="Eastern Europe",]
+MENA = Data_integrated[Data_integrated$region2=="MENA",]
+Sub_Saharan_Africa = Data_integrated[Data_integrated$region2=="Sub-Saharan Africa",]
+Central_Latin_America = Data_integrated[Data_integrated$region2=="Central&Latin America",]
+Western_Europe  = Data_integrated[Data_integrated$region2=="Western Europe",]
+
+
+library(png)
+library(ggpubr)
+
+
+####Asia
+pred.safe.Asia <- predict(model_safe_iteration4, Asia)
+
+Asia_map <- download.file("https://upload.wikimedia.org/wikipedia/commons/6/6a/Asia_map.PNG", destfile = "Asia.png", mode = 'wb') 
+
+img_Asia <- png::readPNG('Asia.png')
+
+ggplot(Asia, aes(x=pred.safe.Asia, Adjusted_index)) +
+  background_image(img_Asia)+
+  geom_point() +
+  stat_smooth(method = lm) + 
+  geom_line(aes(y = Adjusted_index), color = "red", linetype = "dashed")+
+  ggtitle("Predicted safety level relative to the Adjusted Index - Asia")
+  
+
+
+####Eastern Europe
+pred.safe.Eastern_EU <- predict(model_safe_iteration4, Eastern_Europe)
+
+Eastern_Europe_map <- download.file("https://upload.wikimedia.org/wikipedia/commons/a/a2/Eastern-europe-map.png", destfile = "Eastern Europe.png", mode = 'wb') 
+
+img_EU <- png::readPNG('Eastern Europe.png')
+
+ggplot(Eastern_Europe, aes(x=pred.safe.Eastern_EU, Adjusted_index)) +
+  background_image(img_EU)+
+  geom_point() +
+  stat_smooth(method = lm) + 
+  geom_line(aes(y = Adjusted_index), color = "red", linetype = "dashed")+
+  ggtitle("Predicted safety level relative to the Adjusted Index - Eastern Europe")
+  
+
+
+
+####MENA
+pred.safe.MENA <- predict(model_safe_iteration4, MENA)
+
+MENA_map <- download.file("https://upload.wikimedia.org/wikipedia/commons/5/5d/MENA_map.png", destfile = "MENA.png", mode = 'wb') 
+
+img_MENA <- png::readPNG('MENA.png')
+
+ggplot(MENA, aes(x=pred.safe.MENA, Adjusted_index)) +
+  background_image(img_MENA)+
+  geom_point() +
+  stat_smooth(method = lm) + 
+  geom_line(aes(y = Adjusted_index), color = "red", linetype = "dashed")+
+  ggtitle("Predicted safety level relative to the Adjusted Index - MENA")
+  
+
+
+####Sub_Saharan_Africa 
+pred.safe.Sub_Saharan_Africa<- predict(model_safe_iteration4, Sub_Saharan_Africa)
+
+Sub_Saharan_Africa_map <- download.file("https://upload.wikimedia.org/wikipedia/commons/8/80/Sub-Saharan-Africa.png", destfile = "Sub_Saharan_Africa.png", mode = 'wb') 
+
+img_Sub_Saharan_Africa <- png::readPNG('Sub_Saharan_Africa.png')
+
+ggplot(Sub_Saharan_Africa, aes(x=pred.safe.Sub_Saharan_Africa, Adjusted_index)) +
+  background_image(img_Sub_Saharan_Africa)+
+  geom_point() +
+  stat_smooth(method = lm) + 
+  geom_line(aes(y = Adjusted_index), color = "red", linetype = "dashed")+
+  ggtitle("Predicted safety level relative to the Adjusted Index - Sub-Saharan Africa")
+ 
+
+ 
+####Central_Latin_America
+pred.safe.Central_Latin_America <- predict(model_safe_iteration4, Central_Latin_America)
+
+Central_Latin_America_map <- download.file("https://upload.wikimedia.org/wikipedia/commons/7/7d/Map-Latin_America_and_Caribbean.png", destfile = "Central_Latin_America.png", mode = 'wb') 
+
+img_Central_Latin_America <- png::readPNG('Central_Latin_America.png')
+
+ggplot(Central_Latin_America, aes(x=pred.safe.Central_Latin_America, Adjusted_index)) +
+  background_image(img_Central_Latin_America)+
+  geom_point() +
+  stat_smooth(method = lm) + 
+  geom_line(aes(y = Adjusted_index), color = "red", linetype = "dashed")+
+  ggtitle("Predicted safety level relative to the Adjusted Index - Central Latin America")
+
+
+  
+####Western_Europe 
+pred.safe.Western_Europe <- predict(model_safe_iteration4, Western_Europe)
+
+Western_Europe_map <- download.file("https://upload.wikimedia.org/wikipedia/commons/2/26/Western_Europe_map.png", destfile = "Western_Europe.png", mode = 'wb') 
+
+img_Western_Europe <- png::readPNG('Western_Europe.png')
+
+ggplot(Asia, aes(x=pred.safe.Asia, Adjusted_index)) +
+  background_image(img_Western_Europe)+
+  geom_point() +
+  stat_smooth(method = lm) + 
+  geom_line(aes(y = Adjusted_index), color = "red", linetype = "dashed")+
+  ggtitle("Predicted safety level relative to the Adjusted Index - Western Europe")
+  
+```
